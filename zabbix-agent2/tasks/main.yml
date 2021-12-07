@@ -1,0 +1,22 @@
+---
+- name: include tasks for RedHat, Centos
+  include_tasks: "{{ item }}"
+  loop:
+    - RedHat.yml
+  when: ansible_os_family == 'RedHat'
+  tags: [ 'RedHat' ]
+
+
+- name: include tasks for Ubuntu 18.04
+  include_tasks: "{{ item }}"
+  loop:
+    - Ubuntu18.yml
+  when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "18.04"
+
+- name: include tasks for Ubuntu 20.04
+  include_tasks: "{{ item }}"
+  loop:
+    - Ubuntu20.yml
+  when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "20.04"
+
+

@@ -1,0 +1,48 @@
+---
+- name: Include OS-specific variables.
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "vars/{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
+        - "vars/{{ ansible_os_family }}.yml"
+      skip: true
+
+- name: Install Ubuntu dependencies
+  apt:
+    name: "{{ zabbix_agent2_ubuntu20_dependencies }}"
+    update_cache: yes
+    state: present
+
+- name: Install apt repo.
+  apt:
+    deb: "{{ zabbix_agent2_ubuntu20_url }}"
+
+- name: Installing Zabbix Agent2
+  apt:
+    name: zabbix-agent2
+    state: present
+    update_cache: yes
+
+- name: Copy Zabbix Agent2 configuration.
+  template:
+    src: zabbix_agent2_ubuntu20.j2
+    dest: "/etc/zabbix/zabbix_agent2.conf"
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+  notify: restart zabbix_agent2
+  tags: zabbix-agent2
+
+- name: "Enable the zabbix_agent2 service"
+  service:
+    name: "zabbix-agent2"
+    enabled: yes
+    use: systemd
+
+- name: "Restart the zabbix_agent2 service"
+  service:
+    name: "zabbix-agent2"
+    state: restarted
+    use: systemd
+

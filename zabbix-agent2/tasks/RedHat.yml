@@ -1,0 +1,43 @@
+---
+- name: Include OS-specific variables.
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "vars/{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
+        - "vars/{{ ansible_os_family }}.yml"
+      skip: true
+
+- name: Install RedHat dependencies
+  yum:
+    name: "{{ item}}"
+    state: latest
+  with_items: "{{ zabbix_agent2_rhel7_dependencies }}"
+  tags: zabbix-agent2
+
+- name: Install remi repo.
+  yum:
+    name: "{{ zabbix_agent2_rhel7_url }}"
+    state: present
+
+- name: Copy Zabbix Agent2 configuration.
+  template:
+    src: zabbix_agent2_rhel7.j2
+    dest: "/etc/zabbix/zabbix_agent2.conf"
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+  notify: restart zabbix_agent2
+  tags: zabbix-agent2
+
+- name: "Enable the zabbix_agent2 service"
+  service:
+    name: "zabbix-agent2"
+    enabled: yes
+    use: systemd
+
+- name: "Restart the zabbix_agent2 service"
+  service:
+    name: "zabbix-agent2"
+    state: restarted
+    use: systemd
